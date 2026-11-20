@@ -2,21 +2,28 @@
 
 import { ReactNode } from 'react'
 import Link from 'next/link'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 
-const navLinks = [
-  { href: '/',           label: 'Tablero' },
-  { href: '/empleados',  label: 'Empleados' },
-  { href: '/proveedores',label: 'Proveedores' },
-  { href: '/stock',      label: 'Stock' },
-  { href: '/ventas',     label: 'Ventas' },
-  { href: '/cierres',    label: 'Cierres de Caja' },
-  { href: '/reportes',   label: 'Reportes' },
+const todosLosLinks = [
+  { href: '/',            label: 'Tablero',        soloGerente: false },
+  { href: '/ventas',      label: 'Ventas',          soloGerente: false },
+  { href: '/cierres',     label: 'Cierres de Caja', soloGerente: false },
+  { href: '/reportes',    label: 'Reportes',        soloGerente: false },
+  { href: '/stock',       label: 'Stock',           soloGerente: true  },
+  { href: '/proveedores', label: 'Proveedores',     soloGerente: true  },
+  { href: '/empleados',   label: 'Empleados',       soloGerente: true  },
 ]
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const role = (session?.user as any)?.role as string | undefined
+  const esGerente = role === 'gerente'
+
+  const navLinks = todosLosLinks.filter(
+    (link) => !link.soloGerente || esGerente
+  )
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -25,6 +32,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <div className="p-5 border-b border-gray-200 bg-blue-700">
           <h1 className="text-lg font-bold text-white tracking-wide">🥐 Panadería</h1>
           <p className="text-xs text-blue-200 mt-0.5">Sistema de gestión</p>
+          {session?.user?.name && (
+            <p className="text-xs text-blue-100 mt-1 font-medium truncate">
+              👤 {session.user.name}
+              {role && (
+                <span className="ml-1 opacity-75">· {role}</span>
+              )}
+            </p>
+          )}
         </div>
 
         <nav className="flex-1 p-3 space-y-1">
@@ -44,6 +59,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </Link>
             )
           })}
+
+          {/* Separador visual si hay secciones de gerente ocultas */}
+          {!esGerente && (
+            <p className="px-3 pt-3 text-xs text-gray-400 select-none">
+              Contactá al gerente para acceder a más secciones.
+            </p>
+          )}
         </nav>
 
         <div className="p-4 border-t border-gray-200">

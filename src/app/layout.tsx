@@ -1,21 +1,22 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next'
+import './globals.css'
+import Providers from './providers'
 
 export const metadata: Metadata = {
-  title: "Panadería - Gestión",
-  description: "Sistema de administración de panadería",
-};
+  title: 'Panadería - Gestión',
+  description: 'Sistema de administración de panadería',
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
     <html lang="es">
       <body className="min-h-full bg-background font-sans antialiased">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
-  );
+  )
 }

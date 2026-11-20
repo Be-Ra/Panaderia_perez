@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
+// Rutas que solo puede ver el gerente
+const SOLO_GERENTE = ['/empleados', '/proveedores', '/stock']
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -15,16 +18,26 @@ export async function proxy(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   })
 
-  // Si no hay sesión y la ruta es protegida → redirigir al login
+  // Sin sesión y ruta protegida → login
   if (!token && !isPublic) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Si hay sesión e intenta ir al login → redirigir al dashboard
+  // Con sesión en /login → dashboard
   if (token && pathname.startsWith('/login')) {
     return NextResponse.redirect(new URL('/', request.url))
+  }
+
+  // Control de roles: rutas restringidas a gerente
+  if (token) {
+    const role = token.role as string | undefined
+    const esRestringida = SOLO_GERENTE.some((ruta) => pathname.startsWith(ruta))
+
+    if (esRestringida && role !== 'gerente') {
+      return NextResponse.redirect(new URL('/sin-permiso', request.url))
+    }
   }
 
   return NextResponse.next()
@@ -32,7 +45,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Aplica a todo excepto archivos estáticos e imágenes
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
