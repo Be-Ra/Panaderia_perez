@@ -1,0 +1,126 @@
+// use prisma-8
+
+model Empleado {
+  dni                Int       @id
+  nombreApellido     String    @map("nombre_apellido")
+  telefono           String?
+  puesto             String
+  accesoSistema      Boolean   @default(false) @map("acceso_sistema")
+  usuario            String?   @unique
+  passwordHash       String?   @map("password_hash")
+  metricaAsistencias Decimal   @default(0) @map("metrica_asistencias")
+
+  ventas  Venta[]
+  cierres CierreCaja[]
+}
+
+model Proveedor {
+  cuit            String  @id
+  razonSocial     String  @map("razon_social")
+  direccion       String?
+  contacto        String?
+  condicionesPago String? @map("condiciones_pago")
+
+  provisorio  ProveedorProvisorio?
+  suministros Suministro[]
+}
+
+model ProveedorProvisorio {
+  cuit                String    @id
+  fechaVencProvisorio DateString @map("fecha_venc_provisorio")
+  motivo              String
+  proveedor           Proveedor @relation(fields: [cuit], references: [cuit], onDelete: Cascade)
+}
+
+model ElementoStock {
+  idProducto     Int     @id @default(autoincrement()) @map("id_producto")
+  nombre         String
+  tipoCategoria  String? @map("tipo_categoria")
+  precio         Decimal @default(0)
+  cantidadActual Decimal @default(0) @map("cantidad_actual")
+  cantidadMaxima Decimal @map("cantidad_maxima")
+  stockMinimo    Decimal @default(0) @map("stock_minimo")
+  unidadMedida   String  @map("unidad_medida")
+
+  fabricado    ElementoFabricado?
+  materiaPrima MateriaPrima?
+}
+
+model ElementoFabricado {
+  idProducto              Int       @id @map("id_producto")
+  fechaConsumoRecomendada DateString? @map("fecha_consumo_recomendada")
+  stock                   ElementoStock @relation(fields: [idProducto], references: [idProducto], onDelete: Cascade)
+
+  receta   Receta[]
+  detalles DetalleVenta[]
+}
+
+model MateriaPrima {
+  idProducto     Int       @id @map("id_producto")
+  fechaCaducidad DateString? @map("fecha_caducidad")
+  stock          ElementoStock @relation(fields: [idProducto], references: [idProducto], onDelete: Cascade)
+
+  usadaEn     Receta[]
+  suministros Suministro[]
+}
+
+model CierreCaja {
+  idCierre Int      @id @default(autoincrement()) @map("id_cierre")
+  fecha    Date
+  turno    String
+  dni    Int
+  empleado Empleado @relation(fields: [dni], references: [dni], onDelete: Restrict)
+
+  ventas Venta[]
+}
+
+model Venta {
+  nroVenta    BigInt   @id @default(autoincrement()) @map("nro_venta")
+  fecha       Date
+  precioFinal Decimal  @default(0) @map("precio_final")
+  canalVenta  String   @map("canal_venta")
+  dni         Int
+  idCierre    Int      @map("id_cierre")
+
+  empleado Empleado   @relation(fields: [dni], references: [dni], onDelete: Restrict)
+  cierre   CierreCaja @relation(fields: [idCierre], references: [idCierre], onDelete: Restrict)
+  detalle  DetalleVenta[]
+
+  @@index([fecha])
+  @@index([idCierre])
+  @@index([dni])
+}
+
+model DetalleVenta {
+  nroVenta         BigInt  @map("nro_venta")
+  idProducto       Int     @map("id_producto")
+  cantidad         Decimal
+  precioIndividual Decimal @map("precio_individual")
+
+  venta    Venta             @relation(fields: [nroVenta], references: [nroVenta], onDelete: Cascade)
+  producto ElementoFabricado @relation(fields: [idProducto], references: [idProducto], onDelete: Restrict)
+
+  @@id([nroVenta, idProducto])
+}
+
+model Receta {
+  idProducto        Int     @map("id_producto")
+  idMateriaPrima    Int     @map("id_materia_prima")
+  cantidadNecesaria Decimal @map("cantidad_necesaria")
+
+  producto     ElementoFabricado @relation(fields: [idProducto], references: [idProducto], onDelete: Cascade)
+  materiaPrima MateriaPrima      @relation(fields: [idMateriaPrima], references: [idProducto], onDelete: Restrict)
+
+  @@id([idProducto, idMateriaPrima])
+}
+
+model Suministro {
+  cuit           String
+  idProducto     Int     @map("id_producto")
+  precioAcordado Decimal @map("precio_acordado")
+
+  proveedor    Proveedor    @relation(fields: [cuit], references: [cuit], onDelete: Cascade)
+  materiaPrima MateriaPrima @relation(fields: [idProducto], references: [idProducto], onDelete: Cascade)
+
+  @@id([cuit, idProducto])
+}

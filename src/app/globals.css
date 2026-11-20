@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8f9fa;
+  --foreground: #111827;
 }
 
 @theme inline {
@@ -10,17 +10,51 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Escala de grises con más contraste — WCAG AA compliant */
+  --color-gray-50:  #f3f4f6;
+  --color-gray-100: #e5e7eb;
+  --color-gray-200: #d1d5db;
+  --color-gray-300: #9ca3af;
+  --color-gray-400: #6b7280;
+  --color-gray-500: #4b5563;   /* era #6b7280 — sube el contraste sobre blanco */
+  --color-gray-600: #374151;   /* era #4b5563 */
+  --color-gray-700: #1f2937;   /* era #374151 */
+  --color-gray-800: #111827;
+  --color-gray-900: #030712;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Mejorar legibilidad de labels en formularios */
+label {
+  color: #1f2937;
+  font-weight: 500;
+}
+
+/* Encabezados de tabla más legibles */
+th {
+  color: #374151 !important;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+/* Inputs con borde visible */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+input:focus:not([type="checkbox"]):not([type="radio"]),
+select:focus,
+textarea:focus {
+  border-color: #2563eb;
+  outline: 2px solid #bfdbfe;
+  outline-offset: 0;
 }
